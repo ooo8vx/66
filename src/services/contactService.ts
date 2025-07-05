@@ -1,5 +1,18 @@
-import { connectToDatabase } from '../lib/mongodb';
-import Contact, { IContact } from '../models/Contact';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+export interface IContact {
+  id?: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status?: 'new' | 'read' | 'replied' | 'archived';
+  priority?: 'low' | 'medium' | 'high';
+  ip_address?: string;
+  user_agent?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export class ContactService {
   static async createContact(contactData: {
@@ -10,71 +23,40 @@ export class ContactService {
     ipAddress?: string;
     userAgent?: string;
   }): Promise<IContact> {
-    await connectToDatabase();
-    
-    const contact = new Contact({
-      ...contactData,
-      status: 'new',
-      priority: 'medium'
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/contacts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        name: contactData.name,
+        email: contactData.email,
+        subject: contactData.subject,
+        message: contactData.message,
+        ip_address: contactData.ipAddress,
+        user_agent: contactData.userAgent,
+      }),
     });
 
-    return await contact.save();
+    if (!response.ok) {
+      throw new Error('Failed to create contact');
+    }
+
+    return await response.json();
   }
 
-  static async getAllContacts(
-    status?: string,
-    limit: number = 20,
-    skip: number = 0
-  ): Promise<IContact[]> {
-    await connectToDatabase();
-    
-    const query = status ? { status } : {};
-    
-    return await Contact.find(query)
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip(skip);
-  }
+  static async getAllContacts(): Promise<IContact[]> {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/contacts`, {
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+    });
 
-  static async getContactById(contactId: string): Promise<IContact | null> {
-    await connectToDatabase();
-    return await Contact.findById(contactId);
-  }
+    if (!response.ok) {
+      throw new Error('Failed to fetch contacts');
+    }
 
-  static async updateContactStatus(
-    contactId: string,
-    status: 'new' | 'read' | 'replied' | 'archived'
-  ): Promise<IContact | null> {
-    await connectToDatabase();
-    return await Contact.findByIdAndUpdate(
-      contactId,
-      { status, updatedAt: new Date() },
-      { new: true }
-    );
-  }
-
-  static async deleteContact(contactId: string): Promise<boolean> {
-    await connectToDatabase();
-    const result = await Contact.deleteOne({ _id: contactId });
-    return result.deletedCount > 0;
-  }
-
-  static async getContactStats() {
-    await connectToDatabase();
-    
-    const [total, newCount, readCount, repliedCount] = await Promise.all([
-      Contact.countDocuments(),
-      Contact.countDocuments({ status: 'new' }),
-      Contact.countDocuments({ status: 'read' }),
-      Contact.countDocuments({ status: 'replied' })
-    ]);
-
-    return {
-      total,
-      new: newCount,
-      read: readCount,
-      replied: repliedCount,
-      archived: total - newCount - readCount - repliedCount
-    };
+    return await response.json();
   }
 }

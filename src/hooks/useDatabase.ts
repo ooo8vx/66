@@ -1,35 +1,32 @@
 import { useState, useEffect } from 'react';
-import { UserService } from '../services/userService';
-import { ProjectService } from '../services/projectService';
-import { ContactService } from '../services/contactService';
-import { IUser } from '../models/User';
-import { IProject } from '../models/Project';
-import { IContact } from '../models/Contact';
+import { UserService, IUser } from '../services/userService';
+import { ProjectService, IProject } from '../services/projectService';
+import { ContactService, IContact } from '../services/contactService';
 
 export const useUser = (discordId: string) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        setLoading(true);
-        const userData = await UserService.getUserByDiscordId(discordId);
-        setUser(userData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch user');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+      const userData = await UserService.getUserByDiscordId(discordId);
+      setUser(userData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch user');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (discordId) {
       fetchUser();
     }
   }, [discordId]);
 
-  return { user, loading, error, refetch: () => fetchUser() };
+  return { user, loading, error, refetch: fetchUser };
 };
 
 export const useProjects = (userId?: string, featured: boolean = false) => {

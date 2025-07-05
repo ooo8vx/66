@@ -1,5 +1,24 @@
-import { connectToDatabase } from '../lib/mongodb';
-import User, { IUser } from '../models/User';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+export interface IUser {
+  id?: string;
+  discord_id: string;
+  username: string;
+  discriminator: string;
+  avatar_url?: string;
+  email?: string;
+  bio?: string;
+  skills?: string[];
+  social_links?: {
+    github?: string;
+    discord?: string;
+    instagram?: string;
+  };
+  is_active?: boolean;
+  last_login?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export class UserService {
   static async createOrUpdateUser(userData: {
@@ -9,73 +28,59 @@ export class UserService {
     avatarUrl?: string;
     email?: string;
   }): Promise<IUser> {
-    await connectToDatabase();
-
-    const existingUser = await User.findOne({ discordId: userData.discordId });
-
-    if (existingUser) {
-      // Update existing user
-      existingUser.username = userData.username;
-      existingUser.discriminator = userData.discriminator;
-      existingUser.avatarUrl = userData.avatarUrl || existingUser.avatarUrl;
-      existingUser.email = userData.email || existingUser.email;
-      existingUser.lastLogin = new Date();
-      
-      return await existingUser.save();
-    } else {
-      // Create new user
-      const newUser = new User({
-        discordId: userData.discordId,
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        discord_id: userData.discordId,
         username: userData.username,
         discriminator: userData.discriminator,
-        avatarUrl: userData.avatarUrl,
+        avatar_url: userData.avatarUrl,
         email: userData.email,
-        skills: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Tailwind CSS'],
-        socialLinks: {
-          github: 'https://github.com/lordx679',
-          discord: '#',
-          instagram: '#'
-        }
-      });
+      }),
+    });
 
-      return await newUser.save();
+    if (!response.ok) {
+      throw new Error('Failed to create or update user');
     }
+
+    return await response.json();
   }
 
   static async getUserByDiscordId(discordId: string): Promise<IUser | null> {
-    await connectToDatabase();
-    return await User.findOne({ discordId }).populate('projects');
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/users/${discordId}`, {
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error('Failed to fetch user');
+    }
+
+    return await response.json();
   }
 
   static async updateUserProfile(discordId: string, updateData: Partial<IUser>): Promise<IUser | null> {
-    await connectToDatabase();
-    return await User.findOneAndUpdate(
-      { discordId },
-      { ...updateData, updatedAt: new Date() },
-      { new: true, runValidators: true }
-    );
-  }
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/users/${discordId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify(updateData),
+    });
 
-  static async getAllUsers(limit: number = 10, skip: number = 0): Promise<IUser[]> {
-    await connectToDatabase();
-    return await User.find({ isActive: true })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip(skip)
-      .populate('projects');
-  }
+    if (!response.ok) {
+      throw new Error('Failed to update user profile');
+    }
 
-  static async getUserStats(discordId: string) {
-    await connectToDatabase();
-    const user = await User.findOne({ discordId }).populate('projects');
-    
-    if (!user) return null;
-
-    return {
-      totalProjects: user.projects.length,
-      joinDate: user.createdAt,
-      lastActive: user.lastLogin,
-      skillsCount: user.skills.length
-    };
+    return await response.json();
   }
 }

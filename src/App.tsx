@@ -22,7 +22,7 @@ function App() {
   
   // Database hooks
   const { user, loading: userLoading } = useUser(DISCORD_USER_ID);
-  const { projects, loading: projectsLoading } = useProjects(user?._id?.toString(), true);
+  const { projects, loading: projectsLoading } = useProjects(user?.id?.toString(), true);
   const { createContact } = useContacts();
 
   useEffect(() => {
@@ -81,21 +81,21 @@ function App() {
     { 
       name: 'Github', 
       icon: Github, 
-      url: user?.socialLinks?.github || 'https://github.com/lordx679', 
+      url: user?.social_links?.github || 'https://github.com/lordx679', 
       color: 'hover:text-[#a9afb2]',
       description: 'تحقق من مستودعات الكود الخاصة بي'
     },
     { 
       name: 'Discord', 
       icon: MessageCircle, 
-      url: user?.socialLinks?.discord || '#', 
+      url: user?.social_links?.discord || '#', 
       color: 'hover:text-[#a9afb2]',
       description: 'تواصل معي على الديسكورد'
     },
     { 
       name: 'Instagram', 
       icon: Instagram, 
-      url: user?.socialLinks?.instagram || '#', 
+      url: user?.social_links?.instagram || '#', 
       color: 'hover:text-[#a9afb2]',
       description: 'تابع رحلتي الإبداعية'
     },
@@ -317,10 +317,10 @@ function App() {
                           <MapPin className="h-4 w-4 text-[#7d8181] mr-3" />
                           <span><strong>الموقع:</strong> المغرب ← إيطاليا</span>
                         </div>
-                        {user?.createdAt && (
+                        {user?.created_at && (
                           <div className="flex items-center">
                             <Database className="h-4 w-4 text-[#7d8181] mr-3" />
-                            <span><strong>انضم:</strong> {new Date(user.createdAt).toLocaleDateString('ar-SA')}</span>
+                            <span><strong>انضم:</strong> {new Date(user.created_at).toLocaleDateString('ar-SA')}</span>
                           </div>
                         )}
                       </div>
@@ -400,11 +400,11 @@ function App() {
               ) : projects.length > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {projects.map((project, index) => (
-                    <div key={project._id} className="bg-gradient-to-br from-[#3f4b48]/50 to-[#151719]/50 border-2 border-[#3f4b48] rounded-lg overflow-hidden hover:border-[#7d8181] transition-all duration-300 shadow-2xl group hover:scale-105">
-                      {project.imageUrl && (
+                    <div key={project.id} className="bg-gradient-to-br from-[#3f4b48]/50 to-[#151719]/50 border-2 border-[#3f4b48] rounded-lg overflow-hidden hover:border-[#7d8181] transition-all duration-300 shadow-2xl group hover:scale-105">
+                      {project.image_url && (
                         <div className="w-full h-48 overflow-hidden">
                           <img 
-                            src={project.imageUrl} 
+                            src={project.image_url} 
                             alt={project.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           />
@@ -439,9 +439,9 @@ function App() {
                           </div>
                           
                           <div className="flex space-x-2">
-                            {project.githubUrl && (
+                            {project.github_url && (
                               <a 
-                                href={project.githubUrl} 
+                                href={project.github_url} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="p-2 bg-[#7d8181] text-[#151719] rounded-lg hover:bg-[#a9afb2] transition-colors"
@@ -449,9 +449,9 @@ function App() {
                                 <Github className="h-4 w-4" />
                               </a>
                             )}
-                            {project.liveUrl && (
+                            {project.live_url && (
                               <a 
-                                href={project.liveUrl} 
+                                href={project.live_url} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="p-2 bg-[#a9afb2] text-[#151719] rounded-lg hover:bg-[#d0d4d7] transition-colors"
