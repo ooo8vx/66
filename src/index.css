@@ -1,0 +1,284 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #151719;
+  color: #ffffff;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar with legendary theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #3f4b48;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7d8181;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a9afb2;
+}
+
+/* Epic transitions */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Legendary glow effects */
+.glow {
+  box-shadow: 0 0 30px rgba(169, 175, 178, 0.4);
+}
+
+/* Epic gradient animations */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-animate {
+  background: linear-gradient(-45deg, #3f4b48, #7d8181, #a9afb2, #d0d4d7);
+  background-size: 400% 400%;
+  animation: gradient 8s ease infinite;
+}
+
+/* Legendary backdrop blur */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Epic selection styling */
+::selection {
+  background: rgba(169, 175, 178, 0.3);
+  color: #ffffff;
+}
+
+/* Legendary focus states */
+button:focus,
+a:focus {
+  outline: 2px solid #7d8181;
+  outline-offset: 2px;
+}
+
+/* Responsive typography for mobile legends */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Epic loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Legendary hover effects */
+.hover-glow:hover {
+  box-shadow: 0 0 40px rgba(169, 175, 178, 0.6);
+  transform: translateY(-3px);
+}
+
+/* Epic glass morphism */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Legendary text shadow */
+.text-shadow {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Epic border animations */
+@keyframes border-pulse {
+  0%, 100% {
+    border-color: rgba(169, 175, 178, 0.3);
+  }
+  50% {
+    border-color: rgba(169, 175, 178, 0.8);
+  }
+}
+
+.border-pulse {
+  animation: border-pulse 2s ease-in-out infinite;
+}
+
+/* Legendary scale animation for welcome */
+@keyframes scaleX {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* Epic floating particles */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Legendary text glow */
+.text-glow {
+  text-shadow: 0 0 20px rgba(169, 175, 178, 0.5);
+}
+
+/* Epic button hover effects */
+.btn-legendary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(169, 175, 178, 0.3);
+}
+
+/* Legendary card hover effects */
+.card-legendary:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Epic typing animation */
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.typing-animation {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typing 3s steps(40, end);
+}
+
+/* Legendary shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(169, 175, 178, 0.2), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Epic welcome screen animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 1s ease-out;
+}
+
+/* Legendary particle effects */
+@keyframes particle-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-20px) rotate(120deg);
+  }
+  66% {
+    transform: translateY(10px) rotate(240deg);
+  }
+}
+
+.particle-animate {
+  animation: particle-float 4s ease-in-out infinite;
+}
+
+/* Epic crown rotation */
+@keyframes crown-rotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(5deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.crown-animate {
+  animation: crown-rotate 3s ease-in-out infinite;
+}
+
+/* Legendary social media hover effects */
+.social-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(21, 23, 25, 0.4);
+}
+
+/* Epic gradient text animation */
+@keyframes gradient-text {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.gradient-text-animate {
+  background: linear-gradient(-45deg, #7d8181, #a9afb2, #d0d4d7, #a9afb2);
+  background-size: 400% 400%;
+  animation: gradient-text 4s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
