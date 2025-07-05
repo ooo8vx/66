@@ -195,23 +195,14 @@ function App() {
                   <div className="w-32 h-32 mx-auto mb-8 relative">
                     <div className="w-full h-full bg-gradient-to-r from-[#7d8181] via-[#a9afb2] to-[#d0d4d7] rounded-full p-1">
                       <div className="w-full h-full bg-[#151719] rounded-full flex items-center justify-center overflow-hidden relative">
-                        {/* Loading State */}
-                        {avatarLoading && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-[#151719]/80 rounded-full z-10">
-                            <div className="w-8 h-8 border-2 border-[#7d8181] border-t-transparent rounded-full animate-spin"></div>
-                          </div>
-                        )}
-                        
-                        {/* Avatar Image */}
-                        {avatarData?.avatarUrl && !avatarLoading && (
+                        {/* صورة الأفاتار */}
+                        {avatarData?.avatarUrl ? (
                           <img 
                             src={avatarData.avatarUrl} 
                             alt="Discord Avatar"
-                            className="w-full h-full object-cover rounded-full"
-                            onLoad={() => console.log('Avatar loaded successfully')}
+                            className="w-full h-full object-cover rounded-full transition-opacity duration-300"
                             onError={(e) => {
-                              console.error('Avatar failed to load:', e);
-                              // Hide the image and show crown fallback
+                              // في حالة فشل تحميل الصورة، أخفها واعرض التاج
                               e.currentTarget.style.display = 'none';
                               const crownElement = e.currentTarget.parentElement?.querySelector('.crown-fallback');
                               if (crownElement) {
@@ -219,10 +210,10 @@ function App() {
                               }
                             }}
                           />
-                        )}
+                        ) : null}
                         
-                        {/* Crown Fallback */}
-                        <Crown className={`crown-fallback h-16 w-16 text-[#a9afb2] ${avatarData?.avatarUrl && !avatarLoading ? 'hidden' : ''}`} />
+                        {/* التاج الاحتياطي */}
+                        <Crown className={`crown-fallback h-16 w-16 text-[#a9afb2] ${avatarData?.avatarUrl ? 'hidden' : ''}`} />
                       </div>
                     </div>
                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-[#7d8181] to-[#a9afb2] rounded-full flex items-center justify-center animate-pulse">
@@ -237,11 +228,11 @@ function App() {
                     Full-Stack Developer & Digital Creator
                   </p>
                   
-                  {/* Discord Info */}
-                  {avatarData && !avatarLoading && (
+                  {/* معلومات الديسكورد */}
+                  {avatarData && (
                     <div className="text-sm text-[#a9afb2] mb-4 flex items-center justify-center space-x-2">
                       <MessageCircle className="h-4 w-4" />
-                      <span>Discord: {avatarData.username}#{avatarData.discriminator}</span>
+                      <span>Discord: {avatarData.username}</span>
                     </div>
                   )}
                 </div>

@@ -8,7 +8,7 @@ interface DiscordAvatarData {
 
 export const useDiscordAvatar = (userId: string | null) => {
   const [avatarData, setAvatarData] = useState<DiscordAvatarData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -19,98 +19,67 @@ export const useDiscordAvatar = (userId: string | null) => {
       return;
     }
 
-    const fetchDiscordAvatar = async () => {
-      setLoading(true);
-      setError(null);
+    // إنشاء صورة احتياطية فورية
+    const createFallbackAvatar = () => {
+      const defaultAvatarIndex = parseInt(userId.slice(-1)) % 6;
+      return {
+        avatarUrl: `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`,
+        username: 'LORDX679',
+        discriminator: '0000',
+      };
+    };
 
+    // تعيين الصورة الاحتياطية فوراً
+    const fallbackData = createFallbackAvatar();
+    setAvatarData(fallbackData);
+    setLoading(false);
+
+    // محاولة تحميل الصورة الحقيقية في الخلفية
+    const fetchRealAvatar = async () => {
       try {
-        console.log('Fetching Discord avatar for user:', userId);
-        
-        // Check if we have Supabase configuration
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-        // Always provide a fallback first
-        const defaultAvatarIndex = parseInt(userId.slice(-1)) % 5;
-        const defaultAvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
-        
-        const fallbackData = {
-          avatarUrl: defaultAvatarUrl,
-          username: `LORDX679`,
-          discriminator: '0000',
-        };
-
-        // If no Supabase config, use fallback immediately
+        // إذا لم يكن هناك إعداد Supabase، استخدم الاحتياطي
         if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url_here') {
-          console.log('No Supabase config, using fallback avatar');
-          setAvatarData(fallbackData);
-          setLoading(false);
           return;
         }
 
-        // Try to fetch from Supabase edge function
         const apiUrl = `${supabaseUrl}/functions/v1/discord-avatar?userId=${encodeURIComponent(userId)}`;
-        console.log('Attempting to fetch from:', apiUrl);
         
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-        try {
-          const response = await fetch(apiUrl, {
-            headers: {
-              'Authorization': `Bearer ${supabaseAnonKey}`,
-              'Content-Type': 'application/json',
-            },
-            signal: controller.signal
-          });
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal
+        });
 
-          clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
 
-          if (response.ok) {
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-              const data = await response.json();
-              console.log('Successfully fetched avatar data:', data);
-              
-              // Validate the response data
-              if (data && data.avatarUrl) {
-                setAvatarData(data);
-                setLoading(false);
-                return;
-              }
+        if (response.ok) {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            
+            if (data && data.avatarUrl && data.avatarUrl !== fallbackData.avatarUrl) {
+              // تحديث الصورة فقط إذا كانت مختلفة عن الاحتياطية
+              setAvatarData(data);
             }
           }
-          
-          console.log('API response not valid, using fallback');
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-          console.log('Fetch failed, using fallback:', fetchError);
         }
-
-        // Always fall back to default avatar
-        setAvatarData(fallbackData);
-        
       } catch (err) {
-        console.warn('Discord avatar fetch failed, using fallback:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        
-        // Always provide a fallback avatar
-        const defaultAvatarIndex = parseInt(userId.slice(-1)) % 5;
-        const defaultAvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
-        
-        const fallbackData = {
-          avatarUrl: defaultAvatarUrl,
-          username: `LORDX679`,
-          discriminator: '0000',
-        };
-        
-        setAvatarData(fallbackData);
-      } finally {
-        setLoading(false);
+        // في حالة الخطأ، نبقي على الصورة الاحتياطية
+        console.log('Failed to fetch real avatar, keeping fallback');
       }
     };
 
-    fetchDiscordAvatar();
+    // تشغيل التحميل في الخلفية
+    fetchRealAvatar();
+
   }, [userId]);
 
   return { avatarData, loading, error };
