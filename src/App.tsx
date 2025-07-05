@@ -228,13 +228,6 @@ function App() {
                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-[#7d8181] to-[#a9afb2] rounded-full flex items-center justify-center animate-pulse">
                       <div className="w-3 h-3 bg-[#151719] rounded-full"></div>
                     </div>
-                    
-                    {/* Debug Info */}
-                    {avatarError && (
-                      <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-xs text-red-400 whitespace-nowrap">
-                        Discord avatar unavailable
-                      </div>
-                    )}
                   </div>
                   
                   <h1 className="text-5xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#a9afb2] via-[#d0d4d7] to-[#a9afb2] mb-4 drop-shadow-2xl">
@@ -251,12 +244,6 @@ function App() {
                       <span>Discord: {avatarData.username}#{avatarData.discriminator}</span>
                     </div>
                   )}
-                  
-                  {/* Debug Info */}
-                  <div className="text-xs text-[#7d8181] mb-4">
-                    Avatar Status: {avatarLoading ? 'Loading...' : avatarData ? 'Loaded' : 'Not loaded'}
-                    {avatarData && <span> | URL: {avatarData.avatarUrl}</span>}
-                  </div>
                 </div>
 
                 {/* Personal Info */}

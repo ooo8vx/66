@@ -30,104 +30,80 @@ export const useDiscordAvatar = (userId: string | null) => {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-        console.log('Supabase URL:', supabaseUrl);
-        console.log('Supabase Key exists:', !!supabaseAnonKey);
-
-        if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url_here') {
-          console.log('Using fallback avatar generation');
-          // Fallback to generating default Discord avatar without API call
-          const defaultAvatarIndex = parseInt(userId) % 5;
-          const defaultAvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
-          
-          const fallbackData = {
-            avatarUrl: defaultAvatarUrl,
-            username: `User`,
-            discriminator: '0000',
-          };
-          
-          console.log('Fallback avatar data:', fallbackData);
-          setAvatarData(fallbackData);
-          setLoading(false);
-          return;
-        }
-
-        const apiUrl = `${supabaseUrl}/functions/v1/discord-avatar?userId=${encodeURIComponent(userId)}`;
-        console.log('API URL:', apiUrl);
-        
-        const headers = {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        };
-
-        console.log('Making request to Discord avatar function...');
-        const response = await fetch(apiUrl, { headers });
-        console.log('Response status:', response.status);
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-        
-        // Check if response is actually JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          console.log('Response is not JSON, using fallback');
-          // If not JSON, fall back to default avatar generation
-          const defaultAvatarIndex = parseInt(userId) % 5;
-          const defaultAvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
-          
-          const fallbackData = {
-            avatarUrl: defaultAvatarUrl,
-            username: `User`,
-            discriminator: '0000',
-          };
-          
-          console.log('Non-JSON fallback avatar data:', fallbackData);
-          setAvatarData(fallbackData);
-          setLoading(false);
-          return;
-        }
-
-        if (!response.ok) {
-          console.log('Response not OK, trying to parse error');
-          // If response is not ok but is JSON, try to parse error
-          try {
-            const errorData = await response.json();
-            console.log('Error data:', errorData);
-            throw new Error(errorData.error || `HTTP ${response.status}`);
-          } catch (parseError) {
-            console.log('Error parsing failed, using fallback');
-            // If parsing fails, fall back to default avatar
-            const defaultAvatarIndex = parseInt(userId) % 5;
-            const defaultAvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
-            
-            const fallbackData = {
-              avatarUrl: defaultAvatarUrl,
-              username: `User`,
-              discriminator: '0000',
-            };
-            
-            console.log('Parse error fallback avatar data:', fallbackData);
-            setAvatarData(fallbackData);
-            setLoading(false);
-            return;
-          }
-        }
-
-        const data = await response.json();
-        console.log('Successfully fetched avatar data:', data);
-        setAvatarData(data);
-      } catch (err) {
-        console.warn('Discord avatar fetch failed, using fallback:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        
-        // Always provide a fallback avatar instead of showing an error
-        const defaultAvatarIndex = parseInt(userId) % 5;
+        // Always provide a fallback first
+        const defaultAvatarIndex = parseInt(userId.slice(-1)) % 5;
         const defaultAvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
         
         const fallbackData = {
           avatarUrl: defaultAvatarUrl,
-          username: `User`,
+          username: `LORDX679`,
+          discriminator: '0000',
+        };
+
+        // If no Supabase config, use fallback immediately
+        if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your_supabase_url_here') {
+          console.log('No Supabase config, using fallback avatar');
+          setAvatarData(fallbackData);
+          setLoading(false);
+          return;
+        }
+
+        // Try to fetch from Supabase edge function
+        const apiUrl = `${supabaseUrl}/functions/v1/discord-avatar?userId=${encodeURIComponent(userId)}`;
+        console.log('Attempting to fetch from:', apiUrl);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+        try {
+          const response = await fetch(apiUrl, {
+            headers: {
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const data = await response.json();
+              console.log('Successfully fetched avatar data:', data);
+              
+              // Validate the response data
+              if (data && data.avatarUrl) {
+                setAvatarData(data);
+                setLoading(false);
+                return;
+              }
+            }
+          }
+          
+          console.log('API response not valid, using fallback');
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          console.log('Fetch failed, using fallback:', fetchError);
+        }
+
+        // Always fall back to default avatar
+        setAvatarData(fallbackData);
+        
+      } catch (err) {
+        console.warn('Discord avatar fetch failed, using fallback:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        
+        // Always provide a fallback avatar
+        const defaultAvatarIndex = parseInt(userId.slice(-1)) % 5;
+        const defaultAvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
+        
+        const fallbackData = {
+          avatarUrl: defaultAvatarUrl,
+          username: `LORDX679`,
           discriminator: '0000',
         };
         
-        console.log('Error fallback avatar data:', fallbackData);
         setAvatarData(fallbackData);
       } finally {
         setLoading(false);
