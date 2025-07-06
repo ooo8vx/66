@@ -32,10 +32,29 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Get environment variables with better error handling
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error: Missing required environment variables',
+          details: 'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured'
+        }), 
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/');
@@ -52,7 +71,8 @@ Deno.serve(async (req) => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        throw error;
+        console.error('Database error on GET:', error);
+        throw new Error(`Database query failed: ${error.message}`);
       }
 
       return new Response(JSON.stringify(user), {
@@ -64,11 +84,29 @@ Deno.serve(async (req) => {
       // POST /users - Create or update user
       const userData: User = await req.json();
       
-      const { data: existingUser } = await supabaseClient
+      if (!userData.discord_id || !userData.username) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Missing required fields: discord_id and username are required' 
+          }), 
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Check if user exists
+      const { data: existingUser, error: fetchError } = await supabaseClient
         .from('users')
         .select('*')
         .eq('discord_id', userData.discord_id)
         .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Database error on fetch:', fetchError);
+        throw new Error(`Database query failed: ${fetchError.message}`);
+      }
 
       let result;
       if (existingUser) {
@@ -87,7 +125,10 @@ Deno.serve(async (req) => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error on update:', error);
+          throw new Error(`Failed to update user: ${error.message}`);
+        }
         result = data;
       } else {
         // Create new user
@@ -111,11 +152,39 @@ Deno.serve(async (req) => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error on insert:', error);
+          throw new Error(`Failed to create user: ${error.message}`);
+        }
         result = data;
       }
 
       return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (method === 'PUT' && pathParts[3]) {
+      // PUT /users/:discordId - Update user profile
+      const discordId = pathParts[3];
+      const updateData = await req.json();
+
+      const { data, error } = await supabaseClient
+        .from('users')
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('discord_id', discordId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Database error on profile update:', error);
+        throw new Error(`Failed to update user profile: ${error.message}`);
+      }
+
+      return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -126,7 +195,11 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Edge function error:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Internal server error',
+      timestamp: new Date().toISOString()
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
